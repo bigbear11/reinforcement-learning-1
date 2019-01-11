@@ -8,7 +8,7 @@ from keras.optimizers import Adam
 
 EPISODES = 1000
 
-
+#policy gradient的一种,REINFORCE算法
 # This is Policy Gradient agent for the Cartpole
 # In this example, we use REINFORCE algorithm which uses monte-carlo update rule
 class REINFORCEAgent:
@@ -17,8 +17,8 @@ class REINFORCEAgent:
         self.render = True
         self.load_model = False
         # get size of state and action
-        self.state_size = state_size
-        self.action_size = action_size
+        self.state_size = state_size#4
+        self.action_size = action_size#2
 
         # These are hyper parameters for the Policy Gradient
         self.discount_factor = 0.99
@@ -74,14 +74,29 @@ class REINFORCEAgent:
 
     # update policy network every episode
     def train_model(self):
-        episode_length = len(self.states)
+        '''
+        example:
+        self.states:[array([[-0.00647736, -0.04499117,  0.02213829, -0.00486359]]), array([[-0.00737719, -0.24042351,  0.02204101,  0.2947212 ]]), array([[-0.01218566, -0.04562261,  0.02793544,  0.00907036]]), array([[-0.01309811, -0.24113382,  0.02811684,  0.31043471]]), array([[-0.01792078, -0.04642351,  0.03432554,  0.02674995]]), array([[-0.01884925, -0.24202048,  0.03486054,  0.33006229]]), array([[-0.02368966, -0.04741166,  0.04146178,  0.04857336]]), array([[-0.0246379 , -0.24310286,  0.04243325,  0.35404415]]), array([[-0.02949995, -0.43880168,  0.04951413,  0.65979978]]), array([[-0.03827599, -0.2444025 ,  0.06271013,  0.38310959]]), array([[-0.04316404, -0.44035616,  0.07037232,  0.69488702]]), array([[-0.05197116, -0.63637999,  0.08427006,  1.00886738]]), array([[-0.06469876, -0.83251953,  0.10444741,  1.32677873]]), array([[-0.08134915, -0.63885961,  0.13098298,  1.06852366]]), array([[-0.09412634, -0.44569036,  0.15235346,  0.8196508 ]]), array([[-0.10304015, -0.25294509,  0.16874647,  0.57850069]]), array([[-0.10809905, -0.44997994,  0.18031649,  0.91923131]]), array([[-0.11709865, -0.25769299,  0.19870111,  0.68820344]])]
+        self.rewards:[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -100]
+        self.actions:[0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1]
+        '''
+        episode_length = len(self.states)#18
 
         discounted_rewards = self.discount_rewards(self.rewards)
+        '''
+        example:
+        disconnted_rewards:array([ -68.58863868,  -70.29155422,  -72.01167093,  -73.74916255,-75.5042046 , -77.27697434, -79.06765085, -80.876415  , -82.7034495 ,  -84.54893889,  -86.41306958,  -88.29602988,-90.19800998, -92.119202 , -94.0598,-96.02,-98., -100. ])
+        '''
         discounted_rewards -= np.mean(discounted_rewards)
-        discounted_rewards /= np.std(discounted_rewards)
-
-        update_inputs = np.zeros((episode_length, self.state_size))
-        advantages = np.zeros((episode_length, self.action_size))
+        discounted_rewards /= np.std(discounted_rewards)#将作为神经网络预测对象
+        '''
+        array([ 1.59468271,  1.41701722,  1.23755712,  1.05628429,  0.87318042,
+        0.68822702,  0.50140541,  0.3126967 ,  0.12208185, -0.0704584 ,
+       -0.26494351, -0.46139311, -0.65982705, -0.86026537, -1.06272832,
+       -1.26723636, -1.47381013, -1.6824705 ])
+        '''
+        update_inputs = np.zeros((episode_length, self.state_size))#shape(18,4)
+        advantages = np.zeros((episode_length, self.action_size))#shape(18,2)
 
         for i in range(episode_length):
             update_inputs[i] = self.states[i]
@@ -103,6 +118,7 @@ if __name__ == "__main__":
     scores, episodes = [], []
 
     for e in range(EPISODES):
+        import pdb; pdb.set_trace()
         done = False
         score = 0
         state = env.reset()

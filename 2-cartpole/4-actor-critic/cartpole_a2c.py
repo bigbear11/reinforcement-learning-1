@@ -10,6 +10,7 @@ EPISODES = 1000
 
 
 # A2C(Advantage Actor-Critic) agent for the Cartpole
+# actor-critic算法结合了value-based和policy-based方法
 class A2CAgent:
     def __init__(self, state_size, action_size):
         # if you want to see Cartpole learning, then change to True
@@ -35,7 +36,7 @@ class A2CAgent:
 
     # approximate policy and value using Neural Network
     # actor: state is input and probability of each action is output of model
-    def build_actor(self):
+    def build_actor(self):#actor网络:state-->action
         actor = Sequential()
         actor.add(Dense(24, input_dim=self.state_size, activation='relu',
                         kernel_initializer='he_uniform'))
@@ -48,7 +49,7 @@ class A2CAgent:
         return actor
 
     # critic: state is input and value of state is output of model
-    def build_critic(self):
+    def build_critic(self):#critic网络:state-->value,Q值
         critic = Sequential()
         critic.add(Dense(24, input_dim=self.state_size, activation='relu',
                          kernel_initializer='he_uniform'))
@@ -60,7 +61,7 @@ class A2CAgent:
 
     # using the output of policy network, pick action stochastically
     def get_action(self, state):
-        policy = self.actor.predict(state, batch_size=1).flatten()
+        policy = self.actor.predict(state, batch_size=1).flatten()#根据actor网络预测下一步动作
         return np.random.choice(self.action_size, 1, p=policy)[0]
 
     # update policy network every episode
@@ -68,9 +69,12 @@ class A2CAgent:
         target = np.zeros((1, self.value_size))#(1,1)
         advantages = np.zeros((1, self.action_size))#(1, 2)
 
-        value = self.critic.predict(state)[0]
+        value = self.critic.predict(state)[0]#
         next_value = self.critic.predict(next_state)[0]
 
+        '''
+        理解下面部分
+        '''
         if done:
             advantages[0][action] = reward - value
             target[0][0] = reward
@@ -110,7 +114,7 @@ if __name__ == "__main__":
             # if an action make the episode end, then gives penalty of -100
             reward = reward if not done or score == 499 else -100
 
-            agent.train_model(state, action, reward, next_state, done)
+            agent.train_model(state, action, reward, next_state, done)#每执行一次action训练一次
 
             score += reward
             state = next_state

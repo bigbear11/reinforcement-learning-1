@@ -14,7 +14,7 @@ class MCAgent:
         self.discount_factor = 0.9
         self.epsilon = 0.1
         self.samples = []
-        self.value_table = defaultdict(float)
+        self.value_table = defaultdict(float)#初始化值函数表,0
 
     # append sample to memory(state, reward, done)
     def save_sample(self, state, reward, done):
@@ -24,20 +24,20 @@ class MCAgent:
     def update(self):
         G_t = 0
         visit_state = []
-        for reward in reversed(self.samples):
+        for reward in reversed(self.samples):#此处reverse,状态反转
             state = str(reward[0])
-            if state not in visit_state:
+            if state not in visit_state:#first-visit MC methods
                 visit_state.append(state)
-                G_t = self.discount_factor * (reward[1] + G_t)
+                G_t = self.discount_factor * (reward[1] + G_t)#累积回报
                 value = self.value_table[state]
                 self.value_table[state] = (value +
                                            self.learning_rate * (G_t - value))
-                #constant-α monte carlo
+                #constant-α monte carlo constant-α蒙特卡洛值函数更新
 
     # get action for the state according to the q function table
     # agent pick action of epsilon-greedy policy
     def get_action(self, state):
-        if np.random.rand() < self.epsilon:
+        if np.random.rand() < self.epsilon:#以epsilon概率随机选择，Exploration
             # take random action
             action = np.random.choice(self.actions)
         else:
@@ -63,20 +63,23 @@ class MCAgent:
     # get the possible next states
     def possible_next_state(self, state):
         col, row = state
-        next_state = [0.0] * 4
+        next_state = [0.0] * 4 #四个方向,Q(s,a)
 
         if row != 0:
             next_state[0] = self.value_table[str([col, row - 1])]
         else:
             next_state[0] = self.value_table[str(state)]
+
         if row != self.height - 1:
             next_state[1] = self.value_table[str([col, row + 1])]
         else:
             next_state[1] = self.value_table[str(state)]
+
         if col != 0:
             next_state[2] = self.value_table[str([col - 1, row])]
         else:
             next_state[2] = self.value_table[str(state)]
+
         if col != self.width - 1:
             next_state[3] = self.value_table[str([col + 1, row])]
         else:
@@ -90,7 +93,7 @@ if __name__ == "__main__":
     env = Env()
     agent = MCAgent(actions=list(range(env.n_actions)))
 
-    for episode in range(1000):
+    for episode in range(1000):#episode task
         import pdb; pdb.set_trace()
         state = env.reset()
         action = agent.get_action(state)

@@ -12,7 +12,7 @@ EPISODES = 300
 
 
 # DQN Agent for the Cartpole
-# it uses Neural Network to approximate q function
+# it uses Neural Network to approximate q function,使用神经网络近似q-learning的q函数
 # and experience replay memory & fixed target q network
 class DQNAgent:
     def __init__(self, state_size, action_size):
@@ -68,7 +68,7 @@ class DQNAgent:
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
         else:
-            q_value = self.model.predict(state)#2
+            q_value = self.model.predict(state)#2，q(s,a),利用模型预测不同action的q值，选大的作为下一action
             return np.argmax(q_value[0])
 
     # save sample <s,a,r,s'> to the replay memory
@@ -106,7 +106,7 @@ class DQNAgent:
                 target[i][action[i]] = reward[i]
             else:
                 target[i][action[i]] = reward[i] + self.discount_factor * (
-                    np.amax(target_val[i]))
+                    np.amax(target_val[i]))#off-policy 更新
 
         # and do the model fit!
         self.model.fit(update_input, target, batch_size=self.batch_size,

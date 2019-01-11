@@ -23,13 +23,13 @@ class ValueIteration:
                 reward = self.env.get_reward(state, action)
                 next_value = self.get_value(next_state)
                 value_list.append((reward + self.discount_factor * next_value))
-            # return the maximum value(it is the optimality equation!!)
-            next_value_table[state[0]][state[1]] = round(max(value_list), 2)
+            # return the maximum value(it is the optimality equation!!)逼近贝尔曼最优性方程
+            next_value_table[state[0]][state[1]] = round(max(value_list), 2)#每一次更新值函数表时取最大回报的动作更新
         self.value_table = next_value_table
 
     # get action according to the current value function table
     def get_action(self, state):
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         action_list = []
         max_value = -99999
 

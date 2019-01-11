@@ -7,27 +7,27 @@ class PolicyIteration:
     def __init__(self, env):
         self.env = env
         # 2-d list for the value function
-        self.value_table = [[0.0] * env.width for _ in range(env.height)]
+        self.value_table = [[0.0] * env.width for _ in range(env.height)]#值函数表
         # list of random policy (same probability of up, down, left, right)
         self.policy_table = [[[0.25, 0.25, 0.25, 0.25]] * env.width
-                                    for _ in range(env.height)]
+                                    for _ in range(env.height)]#每一状态的动作策略表，一开始向四方运动是相同概率的
         # setting terminal state
-        self.policy_table[2][2] = []
+        self.policy_table[2][2] = []#吸收态，终止
         self.discount_factor = 0.9
 
-    def policy_evaluation(self):
+    def policy_evaluation(self):#策略估计
         next_value_table = [[0.00] * self.env.width
                                     for _ in range(self.env.height)]
 
         # Bellman Expectation Equation for the every states
         for state in self.env.get_all_states():
             value = 0.0
-            # keep the value function of terminal states as 0
+            # keep the value function of terminal states as 0(吸收态赋０)
             if state == [2, 2]:
                 next_value_table[state[0]][state[1]] = value
                 continue
 
-            for action in self.env.possible_actions:
+            for action in self.env.possible_actions:#计算所有可能动作
                 next_state = self.env.state_after_action(state, action)
                 reward = self.env.get_reward(state, action)
                 next_value = self.get_value(next_state)
@@ -38,7 +38,7 @@ class PolicyIteration:
 
         self.value_table = next_value_table
 
-    def policy_improvement(self):
+    def policy_improvement(self):#策略改进
         next_policy = self.policy_table
         for state in self.env.get_all_states():
             if state == [2, 2]:
@@ -47,7 +47,7 @@ class PolicyIteration:
             max_index = []
             result = [0.0, 0.0, 0.0, 0.0]  # initialize the policy
 
-            # for every actions, calculate
+            # for every actions, calculate　计算所有可能动作,保留取得最大值函数的动作
             # [reward + (discount factor) * (next state value function)]
             for index, action in enumerate(self.env.possible_actions):
                 next_state = self.env.state_after_action(state, action)
@@ -56,7 +56,7 @@ class PolicyIteration:
                 temp = reward + self.discount_factor * next_value
 
                 # We normally can't pick multiple actions in greedy policy.
-                # but here we allow multiple actions with same max values
+                # but here we allow multiple actions with same max values　允许多个取最大值函数的动作存在
                 if temp == value:
                     max_index.append(index)
                 elif temp > value:
@@ -70,7 +70,7 @@ class PolicyIteration:
             for index in max_index:
                 result[index] = prob
 
-            next_policy[state[0]][state[1]] = result
+            next_policy[state[0]][state[1]] = result#更新策略表
 
         self.policy_table = next_policy
 

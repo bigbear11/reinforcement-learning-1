@@ -11,20 +11,20 @@ class SARSAgent:
         self.learning_rate = 0.01
         self.discount_factor = 0.9
         self.epsilon = 0.1
-        self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
+        self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])#动作值函数表,q表,要更新的表，不同于mc的更新v表
 
     # with sample <s, a, r, s', a'>, learns new q function
     def learn(self, state, action, reward, next_state, next_action):
         current_q = self.q_table[state][action]
         next_state_q = self.q_table[next_state][next_action]
         new_q = (current_q + self.learning_rate *
-                (reward + self.discount_factor * next_state_q - current_q))
+                (reward + self.discount_factor * next_state_q - current_q))#q表更新公式,on-policy
         self.q_table[state][action] = new_q
 
     # get action for the state according to the q function table
     # agent pick action of epsilon-greedy policy
-    def get_action(self, state):
-        #epsilon-greedy policy
+    def get_action(self, state):#获取下一步动作
+        #epsilon-greedy policy,exploration
         if np.random.rand() < self.epsilon:
             # take random action
             action = np.random.choice(self.actions)

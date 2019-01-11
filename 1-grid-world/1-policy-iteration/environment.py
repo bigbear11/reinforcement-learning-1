@@ -37,12 +37,12 @@ class GraphicDisplay(tk.Tk):
                            height=HEIGHT * UNIT,
                            width=WIDTH * UNIT)
         # buttons
-        iteration_button = Button(self, text="Evaluate",
+        iteration_button = Button(self, text="Policy Evaluate",
                                   command=self.evaluate_policy)
         iteration_button.configure(width=10, activebackground="#33B5E5")
         canvas.create_window(WIDTH * UNIT * 0.13, HEIGHT * UNIT + 10,
                              window=iteration_button)
-        policy_button = Button(self, text="Improve",
+        policy_button = Button(self, text="Policy Improve",
                                command=self.improve_policy)
         policy_button.configure(width=10, activebackground="#33B5E5")
         canvas.create_window(WIDTH * UNIT * 0.37, HEIGHT * UNIT + 10,
