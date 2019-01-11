@@ -81,7 +81,6 @@ class REINFORCEAgent:
         self.actions:[0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1]
         '''
         episode_length = len(self.states)#18
-
         discounted_rewards = self.discount_rewards(self.rewards)
         '''
         example:

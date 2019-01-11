@@ -69,8 +69,8 @@ class A2CAgent:
         target = np.zeros((1, self.value_size))#(1,1)
         advantages = np.zeros((1, self.action_size))#(1, 2)
 
-        value = self.critic.predict(state)[0]#
-        next_value = self.critic.predict(next_state)[0]
+        value = self.critic.predict(state)[0]#critic网络预测的当前q值
+        next_value = self.critic.predict(next_state)[0]#critic网络预测的下一个q值
 
         '''
         理解下面部分
@@ -79,8 +79,8 @@ class A2CAgent:
             advantages[0][action] = reward - value
             target[0][0] = reward
         else:
-            advantages[0][action] = reward + self.discount_factor * (next_value) - value
-            target[0][0] = reward + self.discount_factor * next_value
+            advantages[0][action] = reward + self.discount_factor * (next_value) - value#acotr网络
+            target[0][0] = reward + self.discount_factor * next_value#critic网络
 
         self.actor.fit(state, advantages, epochs=1, verbose=0)
         self.critic.fit(state, target, epochs=1, verbose=0)
@@ -95,7 +95,6 @@ if __name__ == "__main__":
 
     # make A2C agent
     agent = A2CAgent(state_size, action_size)
-
     scores, episodes = [], []
 
     for e in range(EPISODES):

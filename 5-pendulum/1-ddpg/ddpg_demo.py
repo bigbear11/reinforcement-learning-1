@@ -23,9 +23,9 @@ tf.set_random_seed(1)
 
 MAX_EPISODES = 200
 MAX_EP_STEPS = 200
-LR_A = 0.001    # learning rate for actor
-LR_C = 0.001    # learning rate for critic
-GAMMA = 0.9     # reward discount
+lr_a = 0.001    # learning rate for actor
+lr_c = 0.001    # learning rate for critic
+gamma = 0.9     # reward discount
 REPLACEMENT = [
     dict(name='soft', tau=0.01),
     dict(name='hard', rep_iter_a=600, rep_iter_c=500)
@@ -33,7 +33,7 @@ REPLACEMENT = [
 MEMORY_CAPACITY = 10000
 BATCH_SIZE = 32
 
-RENDER = False
+RENDER = True
 OUTPUT_GRAPH = True
 ENV_NAME = 'Pendulum-v0'
 
@@ -50,9 +50,11 @@ class Actor(object):
         self.t_replace_counter = 0
 
         with tf.variable_scope('Actor'):
+            # 这个网络用于及时更新参数
             # input s, output a
             self.a = self._build_net(S, scope='eval_net', trainable=True)
 
+            ##这个网络不及时更新参数, 用于预测action
             # input s_, output a, get a_ for critic
             self.a_ = self._build_net(S_, scope='target_net', trainable=False)
 
@@ -66,7 +68,7 @@ class Actor(object):
             self.soft_replace = [tf.assign(t, (1 - self.replacement['tau']) * t + self.replacement['tau'] * e)
                                  for t, e in zip(self.t_params, self.e_params)]
 
-    def _build_net(self, s, scope, trainable):
+    def _build_net(self, s, scope, trainable):#根据state预测action的网络
         with tf.variable_scope(scope):
             init_w = tf.random_normal_initializer(0., 0.3)
             init_b = tf.constant_initializer(0.1)
@@ -103,7 +105,7 @@ class Actor(object):
 
         with tf.variable_scope('A_train'):
             opt = tf.train.AdamOptimizer(-self.lr)  # (- learning rate) for ascent policy
-            self.train_op = opt.apply_gradients(zip(self.policy_grads, self.e_params))
+            self.train_op = opt.apply_gradients(zip(self.policy_grads, self.e_params))#对eval_net的参数更新
 
 
 ###############################  Critic  ####################################
@@ -120,8 +122,10 @@ class Critic(object):
         with tf.variable_scope('Critic'):
             # Input (s, a), output q
             self.a = tf.stop_gradient(a)    # stop critic update flows to actor
+            # 这个网络用于及时更新参数
             self.q = self._build_net(S, self.a, 'eval_net', trainable=True)
 
+            # 这个网络不及时更新参数, 用于评价actor          
             # Input (s_, a_), output q_ for q_target
             self.q_ = self._build_net(S_, a_, 'target_net', trainable=False)    # target_q is based on a_ from Actor's target_net
 
@@ -129,13 +133,13 @@ class Critic(object):
             self.t_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Critic/target_net')
 
         with tf.variable_scope('target_q'):
-            self.target_q = R + self.gamma * self.q_
+            self.target_q = R + self.gamma * self.q_#target计算
 
         with tf.variable_scope('TD_error'):
-            self.loss = tf.reduce_mean(tf.squared_difference(self.target_q, self.q))
+            self.loss = tf.reduce_mean(tf.squared_difference(self.target_q, self.q))#计算loss
 
         with tf.variable_scope('C_train'):
-            self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
+            self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)#训练
 
         with tf.variable_scope('a_grad'):
             self.a_grads = tf.gradients(self.q, a)[0]   # tensor of gradients of each sample (None, a_dim)
@@ -147,7 +151,7 @@ class Critic(object):
             self.soft_replacement = [tf.assign(t, (1 - self.replacement['tau']) * t + self.replacement['tau'] * e)
                                      for t, e in zip(self.t_params, self.e_params)]
 
-    def _build_net(self, s, a, scope, trainable):
+    def _build_net(self, s, a, scope, trainable):#Q网络,计算Q(s,a)
         with tf.variable_scope(scope):
             init_w = tf.random_normal_initializer(0., 0.1)
             init_b = tf.constant_initializer(0.1)
@@ -192,14 +196,14 @@ class Memory(object):
         indices = np.random.choice(self.capacity, size=n)
         return self.data[indices, :]
 
-
+import pdb; pdb.set_trace()
 env = gym.make(ENV_NAME)
 env = env.unwrapped
 env.seed(1)
 
-state_dim = env.observation_space.shape[0]
-action_dim = env.action_space.shape[0]
-action_bound = env.action_space.high
+state_dim = env.observation_space.shape[0]#3
+action_dim = env.action_space.shape[0]#1 连续动作,一维
+action_bound = env.action_space.high#[2]
 
 # all placeholder for tf
 with tf.name_scope('S'):
@@ -214,9 +218,9 @@ sess = tf.Session()
 
 # Create actor and critic.
 # They are actually connected to each other, details can be seen in tensorboard or in this picture:
-actor = Actor(sess, action_dim, action_bound, LR_A, REPLACEMENT)
-critic = Critic(sess, state_dim, action_dim, LR_C, GAMMA, REPLACEMENT, actor.a, actor.a_)
-actor.add_grad_to_graph(critic.a_grads)
+actor = Actor(sess, action_dim, action_bound, lr_a, REPLACEMENT)
+critic = Critic(sess, state_dim, action_dim, lr_c, gamma, REPLACEMENT, actor.a, actor.a_)
+actor.add_grad_to_graph(critic.a_grads)# # 将 critic 产出的 dQ/da 加入到 Actor 的 Graph 中去
 
 sess.run(tf.global_variables_initializer())
 

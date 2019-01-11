@@ -32,7 +32,7 @@ class A3CAgent:
         self.critic_lr = 0.001
         self.discount_factor = .99
         self.hidden1, self.hidden2 = 24, 24
-        self.threads = 8
+        self.threads = 8  #8个线程并行
 
         # create model for actor and critic network
         self.actor, self.critic = self.build_model()
@@ -108,7 +108,7 @@ class A3CAgent:
     def train(self):
         # self.load_model('./save_model/cartpole_a3c.h5')
         agents = [Agent(i, self.actor, self.critic, self.optimizer, self.env_name, self.discount_factor,
-                        self.action_size, self.state_size) for i in range(self.threads)]
+                        self.action_size, self.state_size) for i in range(self.threads)]#建立8个local agent
 
         for agent in agents:
             agent.start()
