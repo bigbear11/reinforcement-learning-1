@@ -123,7 +123,7 @@ if __name__ == "__main__":
     agent = DQNAgent(state_size, action_size)
 
     scores, episodes = [], []
-
+    import pdb;pdb.set_trace()
     for e in range(EPISODES):
         done = False
         score = 0

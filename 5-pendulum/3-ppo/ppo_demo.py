@@ -36,23 +36,23 @@ class PPO(object):
 
     def __init__(self):
         self.sess = tf.Session()
-        self.tfs = tf.placeholder(tf.float32, [None, S_DIM], 'state')
+        self.tfs = tf.placeholder(tf.float32, [None, S_DIM], 'state')#states
 
         # critic
         with tf.variable_scope('critic'):
             l1 = tf.layers.dense(self.tfs, 100, tf.nn.relu)
-            self.v = tf.layers.dense(l1, 1)
-            self.tfdc_r = tf.placeholder(tf.float32, [None, 1], 'discounted_r')
+            self.v = tf.layers.dense(l1, 1)#两层dense层
+            self.tfdc_r = tf.placeholder(tf.float32, [None, 1], 'discounted_r')#discounted reward
             self.advantage = self.tfdc_r - self.v
             self.closs = tf.reduce_mean(tf.square(self.advantage))
             self.ctrain_op = tf.train.AdamOptimizer(C_LR).minimize(self.closs)
 
         # actor
-        pi, pi_params = self._build_anet('pi', trainable=True)
+        pi, pi_params = self._build_anet('pi', trainable=True)#build pi network,pi(theta)
         oldpi, oldpi_params = self._build_anet('oldpi', trainable=False)
         with tf.variable_scope('sample_action'):
-            self.sample_op = tf.squeeze(pi.sample(1), axis=0)       # choosing action
-        with tf.variable_scope('update_oldpi'):
+            self.sample_op = tf.squeeze(pi.sample(1), axis=0)#choosing action
+        with tf.variable_scope('update_oldpi'):#use pi network to update oldpi network
             self.update_oldpi_op = [oldp.assign(p) for p, oldp in zip(pi_params, oldpi_params)]
 
         self.tfa = tf.placeholder(tf.float32, [None, A_DIM], 'action')
@@ -125,6 +125,7 @@ env = gym.make('Pendulum-v0').unwrapped
 ppo = PPO()
 all_ep_r = []
 
+import pdb;pdb.set_trace()
 for ep in range(EP_MAX):
     s = env.reset()
     buffer_s, buffer_a, buffer_r = [], [], []
@@ -133,9 +134,9 @@ for ep in range(EP_MAX):
         env.render()
         a = ppo.choose_action(s)
         s_, r, done, _ = env.step(a)
-        buffer_s.append(s)
-        buffer_a.append(a)
-        buffer_r.append((r+8)/8)    # normalize reward, find to be useful
+        buffer_s.append(s)#add state
+        buffer_a.append(a)#add action
+        buffer_r.append((r+8)/8)#add reward, normalize reward, find to be useful
         s = s_
         ep_r += r
 
@@ -143,14 +144,14 @@ for ep in range(EP_MAX):
         if (t+1) % BATCH == 0 or t == EP_LEN-1:
             v_s_ = ppo.get_v(s_)
             discounted_r = []
-            for r in buffer_r[::-1]:
+            for r in buffer_r[::-1]:#reverse
                 v_s_ = r + GAMMA * v_s_
                 discounted_r.append(v_s_)
             discounted_r.reverse()
 
             bs, ba, br = np.vstack(buffer_s), np.vstack(buffer_a), np.array(discounted_r)[:, np.newaxis]
             buffer_s, buffer_a, buffer_r = [], [], []
-            ppo.update(bs, ba, br)
+            ppo.update(bs, ba, br)#train batch 
     if ep == 0: all_ep_r.append(ep_r)
     else: all_ep_r.append(all_ep_r[-1]*0.9 + ep_r*0.1)
     print(

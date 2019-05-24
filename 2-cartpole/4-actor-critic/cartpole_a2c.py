@@ -96,7 +96,8 @@ if __name__ == "__main__":
     # make A2C agent
     agent = A2CAgent(state_size, action_size)
     scores, episodes = [], []
-
+    import pdb
+    pdb.set_trace()
     for e in range(EPISODES):
         done = False
         score = 0
